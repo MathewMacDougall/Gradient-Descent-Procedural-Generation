@@ -3,6 +3,10 @@ import math
 import matplotlib.pyplot as plt
 import projgrad
 from enum import IntEnum, unique, auto
+from celluloid import Camera
+import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
+
 
 WIDTH = 10
 HEIGHT = 10
@@ -135,7 +139,7 @@ def init_x0():
     return x0
 
 
-def plot_data(x0, x):
+def plot_data(ax, x0, x):
     def plot_cities(ax, x, color):
         ax.scatter(x[Data.CITY_1_X], x[Data.CITY_1_Y], c=color)
         ax.scatter(x[Data.CITY_2_X], x[Data.CITY_2_Y], c=color)
@@ -148,17 +152,17 @@ def plot_data(x0, x):
         water_circle = plt.Circle(water_pos, water_radius, color=color, alpha=0.5)
         ax.add_artist(water_circle)
 
-    fig, ax = plt.subplots()
-    ax.axis('square')
-    ax.axis([-WIDTH/2, WIDTH/2, -HEIGHT/2, HEIGHT/2])
+    # fig, ax = plt.subplots()
+    # ax.axis('square')
+    # ax.axis([-WIDTH/2, WIDTH/2, -HEIGHT/2, HEIGHT/2])
 
-    plot_water(ax, x0, 'r')
+    # plot_water(ax, x0, 'r')
     plot_water(ax, x, 'b')
 
-    plot_cities(ax, x0, 'r')
+    # plot_cities(ax, x0, 'r')
     plot_cities(ax, x, 'g')
 
-    plt.show(block=True)
+    # plt.show(block=True)
 
 
 def main():
@@ -180,17 +184,28 @@ def main():
     mask = len(list(Data)) * [False]
     # mask[Data.LAKE_X] = True
     # mask[Data.LAKE_Y] = True
-    # mask[Data.LAKE_RADIUS] = True
+    mask[Data.LAKE_RADIUS] = True
+    data = []
     def cb(f, p):
         print("current score: {}".format(f))
-    res = projgrad.minimize(minimization_func, x0, project=project, mask=mask, maxiters=500, disp=False, callback=cb)
+        data.append(p)
+    res = projgrad.minimize(minimization_func, x0, project=project, mask=mask, maxiters=1500, disp=False, callback=cb, nboundupdate=1)
     optimized_x = res.x
     print("done optimizing")
     print("optimized: {}".format(optimized_x))
     print("\nStarting cost: {}".format(cost(x0)))
     print("Optimized cost: {}".format(cost(optimized_x)))
 
-    plot_data(x0, optimized_x)
+    fig, ax = plt.subplots()
+    ax.axis('square')
+    ax.axis([-WIDTH/2, WIDTH/2, -HEIGHT/2, HEIGHT/2])
+    camera = Camera(fig)
+    # A hack to display the final frame for a bit longer
+    for d in data + 10*[data[-1]]:
+        plot_data(ax, x0, d)
+        camera.snap()
+    anim = camera.animate(interval=200, blit=True, repeat_delay=500)
+    plt.show()
 
 
 if __name__ == '__main__':
