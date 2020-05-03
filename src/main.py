@@ -6,6 +6,7 @@ from enum import IntEnum, unique, auto
 from celluloid import Camera
 import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation
+from math_util import *
 
 
 WIDTH = 10
@@ -28,33 +29,6 @@ class Data(DataEnumValueGenerator):
     CITY_2_Y = auto()
     CITY_3_X = auto()
     CITY_3_Y = auto()
-
-
-def sigmoid(x, offset, width):
-    """
-    A sigmoid function with a given offset from 0 and rate of change
-
-    By default this function increases as the value of x increases.
-    ie. y = 1 / (1+e^(-x)
-    To flip the sigmoid so the function decreases as the value of x increases,
-    subtract it from 1
-
-    :param x: The value to evaluate over the sigmoid
-    :param offset: The offset of the center of the sigmoid from 0
-    :param width: The total amount of change (centered around the offset) x must undergo
-    to cause the value of the sigmoid to go from 0.018 to 0.982
-    :return: A value in [0, 1] that is the value of the sigmoid at x
-    """
-    # This is the factor that changes how quickly the sigmoid goes from 0 to 1.
-    # We divide 8 by it because that is the distance a sigmoid function centered
-    # about 0 takes to go from 0.018 to 0.982 (and that is what the 'width' parameter is)
-    change_factor = 8 / width
-    # Help prevent math range errors
-    # https://stackoverflow.com/a/36269186
-    if x < 0:
-        return 1 - 1 / (1 + math.exp(change_factor * (offset + x)))
-    else:
-        return 1 / (1 + math.exp(change_factor * (offset - x)))
 
 
 def project(x, mask=len(list(Data))*[False]):
@@ -93,21 +67,25 @@ def score(x):
         return math.hypot(a[0] - b[0], a[1] - b[1])
 
     # Cities prefer to be close to the water (in about [0.1, 1])
-    city_1_water_score = sigmoid(dist_from_water(city_1_pos), 0.1, 0.05) - sigmoid(dist_from_water(city_1_pos), 0.3, 0.05) - 0.01*abs(dist_from_water(city_1_pos)-0.2)
-    city_2_water_score = sigmoid(dist_from_water(city_2_pos), 0.1, 0.05) - sigmoid(dist_from_water(city_2_pos), 0.3, 0.05) - 0.01*abs(dist_from_water(city_2_pos)-0.2)
-    city_3_water_score = sigmoid(dist_from_water(city_3_pos), 0.1, 0.05) - sigmoid(dist_from_water(city_3_pos), 0.3, 0.05) - 0.01*abs(dist_from_water(city_3_pos)-0.2)
-    city_1_water_score = - abs(dist_from_water(city_1_pos)-0.2)
-    city_2_water_score = - abs(dist_from_water(city_2_pos)-0.2)
-    city_3_water_score = - abs(dist_from_water(city_3_pos)-0.2)
+    city_score_func = create_sigmoid_interpolation([(0.1, 0), (0.2, 1), (0.5, 1), (0.6, 0)])
+    city_1_water_score = city_score_func(dist_from_water(city_1_pos))
+    city_2_water_score = city_score_func(dist_from_water(city_2_pos))
+    city_3_water_score = city_score_func(dist_from_water(city_3_pos))
+    # city_1_water_score = sigmoid(dist_from_water(city_1_pos), 0.1, 0.05) - sigmoid(dist_from_water(city_1_pos), 0.3, 0.05) - 0.01*abs(dist_from_water(city_1_pos)-0.2)
+    # city_2_water_score = sigmoid(dist_from_water(city_2_pos), 0.1, 0.05) - sigmoid(dist_from_water(city_2_pos), 0.3, 0.05) - 0.01*abs(dist_from_water(city_2_pos)-0.2)
+    # city_3_water_score = sigmoid(dist_from_water(city_3_pos), 0.1, 0.05) - sigmoid(dist_from_water(city_3_pos), 0.3, 0.05) - 0.01*abs(dist_from_water(city_3_pos)-0.2)
+    # city_1_water_score = - abs(dist_from_water(city_1_pos)-0.2)
+    # city_2_water_score = - abs(dist_from_water(city_2_pos)-0.2)
+    # city_3_water_score = - abs(dist_from_water(city_3_pos)-0.2)
 
     city_1_score = city_1_water_score
     city_2_score = city_2_water_score
     city_3_score = city_3_water_score
 
     water_weight = 1
-    city_weight = 10
+    city_weight = 1
 
-    score = water_weight * (water_score) + city_weight * (city_1_score + city_2_score + city_3_score)
+    score = water_weight * (water_score) + city_weight * (city_1_score * city_2_score * city_3_score)
     return score
 
 # Cost is opposite of score
@@ -116,7 +94,7 @@ def cost(x):
 
 def grad(fun, x):
     ret = []
-    dx = 0.01
+    dx = 0.001
     for val in range(len(x)):
         xpos = x.copy()
         xpos[val] += dx
@@ -156,10 +134,10 @@ def plot_data(ax, x0, x):
     # ax.axis('square')
     # ax.axis([-WIDTH/2, WIDTH/2, -HEIGHT/2, HEIGHT/2])
 
-    # plot_water(ax, x0, 'r')
+    plot_water(ax, x0, 'r')
     plot_water(ax, x, 'b')
 
-    # plot_cities(ax, x0, 'r')
+    plot_cities(ax, x0, 'r')
     plot_cities(ax, x, 'g')
 
     # plt.show(block=True)
@@ -188,10 +166,11 @@ def main():
     data = []
     def cb(f, p):
         print("current score: {}".format(f))
+        print("grad: {}".format(grad(cost, p)))
         data.append(p)
-    res = projgrad.minimize(minimization_func, x0, project=project, mask=mask, maxiters=1500, disp=False, callback=cb, nboundupdate=1)
+    res = projgrad.minimize(minimization_func, x0, project=project, mask=mask, maxiters=60, disp=True, callback=cb, nboundupdate=1, reltol=0, abstol=0, algo='fast')
     optimized_x = res.x
-    print("done optimizing")
+    print("done optimizing in {} iterations".format(res.nit))
     print("optimized: {}".format(optimized_x))
     print("\nStarting cost: {}".format(cost(x0)))
     print("Optimized cost: {}".format(cost(optimized_x)))
