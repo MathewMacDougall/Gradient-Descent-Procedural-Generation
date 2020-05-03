@@ -107,7 +107,7 @@ def grad(fun, x):
     return np.asarray(ret)
 
 def init_x0():
-    np.random.seed(0)
+    np.random.seed(1)
     num_elements = len(list(Data))
     x0 = np.random.rand(num_elements)
     spread = max(WIDTH, HEIGHT)
@@ -184,6 +184,12 @@ def main():
         plot_data(ax, x0, d)
         camera.snap()
     anim = camera.animate(interval=200, blit=True, repeat_delay=500)
+    path = "~/programming/animation2"
+    mp4 = path+".mp4"
+    gif = path+".gif"
+    anim.save(mp4)
+    import subprocess
+    subprocess.call(["ffmpeg", "-i", mp4, "-vf", "scale=1920:-1", "-loop", "0", gif, "-y"])
     plt.show()
 
 
