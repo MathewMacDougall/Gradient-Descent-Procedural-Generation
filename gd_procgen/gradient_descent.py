@@ -15,8 +15,11 @@ def _grad(cost_fun, x: np.array):
     # Need asarray so can multiply by scalars (needed by projgrad)
     return np.asarray(ret)
 
+def maximize(cost_func, x0, max_iters=500):
+    new_cost_func = lambda x: -cost_func(x)
+    return minimize(new_cost_func, x0, max_iters)
 
-def minimize(cost_func, x0, max_iters=500, reltol=1e-4, abstol=1e-4):
+def minimize(cost_func, x0, max_iters=500):
     x0 = x0.astype(np.float64)
     current_iteration = 0
     nabla = 0.1
