@@ -93,12 +93,28 @@ def _create_grad_func(grad_type, rand_seed=None):
         raise ValueError("Invalid gradient type")
 
 
-def maximize(cost_func, x0, grad_type=GRAD_TYPE.BATCH, max_iters=500, rand_seed=None):
+def maximize(
+    cost_func,
+    x0,
+    grad_type=GRAD_TYPE.BATCH,
+    max_iters=500,
+    rand_seed=None,
+    callback=None,
+    callback_every=10,
+):
     new_cost_func = lambda x: -cost_func(x)
     return minimize(new_cost_func, x0, grad_type, max_iters, rand_seed)
 
 
-def minimize(cost_func, x0, grad_type=GRAD_TYPE.BATCH, max_iters=500, rand_seed=None):
+def minimize(
+    cost_func,
+    x0,
+    grad_type=GRAD_TYPE.BATCH,
+    max_iters=500,
+    rand_seed=None,
+    callback=None,
+    callback_every=10,
+):
     if not isinstance(cost_func(x0), (int, float, np.float64, np.int64)):
         raise RuntimeError(
             "Cost func outputs uneexpected type {}".format(type(cost_func(x0)))
@@ -111,10 +127,17 @@ def minimize(cost_func, x0, grad_type=GRAD_TYPE.BATCH, max_iters=500, rand_seed=
     current_iteration = 0
     nabla = 0.1
     x = copy.deepcopy(x0)
+    if callback:
+        callback(x)
     while current_iteration < max_iters:
         current_iteration += 1
         grad = _grad(cost_func, x)
         step = -nabla * grad
         x = x + step
+        if callback and current_iteration % callback_every == 0:
+            callback(x)
+
+    if callback:
+        callback(x)
 
     return x, cost_func(x)
