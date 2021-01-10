@@ -16,7 +16,8 @@ HEIGHT = 10
 # starting from 0
 class DataEnumValueGenerator(IntEnum):
     def _generate_next_value_(name, start, count, last_values):
-        return start+count-1
+        return start + count - 1
+
 
 @unique
 class Data(DataEnumValueGenerator):
@@ -31,7 +32,7 @@ class Data(DataEnumValueGenerator):
     CITY_3_Y = auto()
 
 
-def project(x, mask=len(list(Data))*[False]):
+def project(x, mask=len(list(Data)) * [False]):
     """
     Projects the data into the feasible set
     :param x: A list of data
@@ -42,8 +43,9 @@ def project(x, mask=len(list(Data))*[False]):
             if index == Data.LAKE_RADIUS:
                 x[index] = np.clip(x[index], 1, 2)
             else:
-                x[index] = np.clip(x[index], -WIDTH/2, WIDTH/2)
+                x[index] = np.clip(x[index], -WIDTH / 2, WIDTH / 2)
     return x
+
 
 def score(x):
     """
@@ -67,7 +69,9 @@ def score(x):
         return math.hypot(a[0] - b[0], a[1] - b[1])
 
     # Cities prefer to be close to the water (in about [0.1, 1])
-    city_score_func = create_sigmoid_interpolation([(0.1, 0), (0.2, 1), (0.5, 1), (0.6, 0)])
+    city_score_func = create_sigmoid_interpolation(
+        [(0.1, 0), (0.2, 1), (0.5, 1), (0.6, 0)]
+    )
     city_1_water_score = city_score_func(dist_from_water(city_1_pos))
     city_2_water_score = city_score_func(dist_from_water(city_2_pos))
     city_3_water_score = city_score_func(dist_from_water(city_3_pos))
@@ -85,12 +89,16 @@ def score(x):
     water_weight = 1
     city_weight = 1
 
-    score = water_weight * (water_score) + city_weight * (city_1_score * city_2_score * city_3_score)
+    score = water_weight * (water_score) + city_weight * (
+        city_1_score * city_2_score * city_3_score
+    )
     return score
+
 
 # Cost is opposite of score
 def cost(x):
     return -score(x)
+
 
 def grad(fun, x):
     ret = []
@@ -100,11 +108,12 @@ def grad(fun, x):
         xpos[val] += dx
         xneg = x.copy()
         xneg[val] -= dx
-        diff = (fun(xpos) - fun(xneg))
-        g = diff / (2*dx)
+        diff = fun(xpos) - fun(xneg)
+        g = diff / (2 * dx)
         ret.append(g)
     # Need asarray so can multiply by scalars (needed by projgrad)
     return np.asarray(ret)
+
 
 def init_x0():
     np.random.seed(1)
@@ -134,11 +143,11 @@ def plot_data(ax, x0, x):
     # ax.axis('square')
     # ax.axis([-WIDTH/2, WIDTH/2, -HEIGHT/2, HEIGHT/2])
 
-    plot_water(ax, x0, 'r')
-    plot_water(ax, x, 'b')
+    plot_water(ax, x0, "r")
+    plot_water(ax, x, "b")
 
-    plot_cities(ax, x0, 'r')
-    plot_cities(ax, x, 'g')
+    plot_cities(ax, x0, "r")
+    plot_cities(ax, x, "g")
 
     # plt.show(block=True)
 
@@ -155,20 +164,35 @@ def main():
     x0 = project(x0)
     print("projected x0: {}".format(x0))
 
-
     print("Optimizing...")
+
     def minimization_func(x):
         return cost(x), grad(cost, x)
+
     mask = len(list(Data)) * [False]
     # mask[Data.LAKE_X] = True
     # mask[Data.LAKE_Y] = True
     mask[Data.LAKE_RADIUS] = True
     data = []
+
     def cb(f, p):
         print("current score: {}".format(f))
         print("grad: {}".format(grad(cost, p)))
         data.append(p)
-    res = projgrad.minimize(minimization_func, x0, project=project, mask=mask, maxiters=60, disp=True, callback=cb, nboundupdate=1, reltol=0, abstol=0, algo='fast')
+
+    res = projgrad.minimize(
+        minimization_func,
+        x0,
+        project=project,
+        mask=mask,
+        maxiters=60,
+        disp=True,
+        callback=cb,
+        nboundupdate=1,
+        reltol=0,
+        abstol=0,
+        algo="fast",
+    )
     optimized_x = res.x
     print("done optimizing in {} iterations".format(res.nit))
     print("optimized: {}".format(optimized_x))
@@ -176,22 +200,25 @@ def main():
     print("Optimized cost: {}".format(cost(optimized_x)))
 
     fig, ax = plt.subplots()
-    ax.axis('square')
-    ax.axis([-WIDTH/2, WIDTH/2, -HEIGHT/2, HEIGHT/2])
+    ax.axis("square")
+    ax.axis([-WIDTH / 2, WIDTH / 2, -HEIGHT / 2, HEIGHT / 2])
     camera = Camera(fig)
     # A hack to display the final frame for a bit longer
-    for d in data + 10*[data[-1]]:
+    for d in data + 10 * [data[-1]]:
         plot_data(ax, x0, d)
         camera.snap()
     anim = camera.animate(interval=200, blit=True, repeat_delay=500)
     path = "~/programming/animation2"
-    mp4 = path+".mp4"
-    gif = path+".gif"
+    mp4 = path + ".mp4"
+    gif = path + ".gif"
     anim.save(mp4)
     import subprocess
-    subprocess.call(["ffmpeg", "-i", mp4, "-vf", "scale=1920:-1", "-loop", "0", gif, "-y"])
+
+    subprocess.call(
+        ["ffmpeg", "-i", mp4, "-vf", "scale=1920:-1", "-loop", "0", gif, "-y"]
+    )
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

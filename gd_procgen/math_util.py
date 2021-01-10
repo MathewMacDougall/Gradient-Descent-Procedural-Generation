@@ -31,7 +31,7 @@ def sigmoid(x, offset, width):
 
 def smooth_abs(x, eps=1e-6):
     """
-    A smooth, differentiable approximation of the absolute value. 
+    A smooth, differentiable approximation of the absolute value.
     See http://www.cs.utep.edu/vladik/2013/tr13-44.pdf
     :param x: The value to take the absolute value of
     :param eps:
@@ -77,7 +77,7 @@ def create_sigmoid_interpolation(t):
         result += t[0][1]
 
         for current, next in zip(t, t[1:]):
-            if (current[1] == next[1]):
+            if current[1] == next[1]:
                 continue
             width = next[0] - current[0]
             center = current[0] + width / 2
