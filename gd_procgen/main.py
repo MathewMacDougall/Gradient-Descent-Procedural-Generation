@@ -9,7 +9,6 @@ class OptimizationProblem:
         self._data = []
         self._x0 = x0
         self._cost_func = cost_func
-        self._animation_func = None
         fig, ax = plt.subplots()
         self._fig = fig
         self._ax = ax
@@ -26,20 +25,22 @@ class OptimizationProblem:
     def _set_animation_function(self, func):
         def animate(i):
             data = self._data[i]
-            return func(data,self._ax)
+            return func(data, self._ax)
 
         self._animation_func = animate
 
-
-    def play_animation(self):
-        # TODO: set bounds from data
-        self._ax.set_xlim(-5, 5)
-        self._ax.set_ylim(-5, 5)
+    def play_animation(self, xlim, ylim):
+        self._ax.set_xlim(xlim)
+        self._ax.set_ylim(ylim)
         self._ax.set_aspect("equal")
         self._ax.grid()
 
-        ani = animation.FuncAnimation(
-            self._fig, self._animation_func, len(self._data), interval=0.1 * 1000, blit=True
+        animation.FuncAnimation(
+            self._fig,
+            self._animation_func,
+            len(self._data),
+            interval=0.1 * 1000,
+            blit=True,
         )
         plt.show()
 
@@ -57,7 +58,7 @@ def main():
 
     problem = OptimizationProblem(x0, cost_func, draw)
     problem.optimize()
-    problem.play_animation()
+    problem.play_animation(xlim=(-5, 5), ylim=(-5, 5))
 
 
 if __name__ == "__main__":
