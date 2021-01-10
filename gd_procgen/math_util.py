@@ -86,32 +86,3 @@ def create_sigmoid_interpolation(t):
         return result
 
     return func
-
-
-# import numpy as np
-# import matplotlib.pyplot as plt
-#
-# t = np.linspace(-10, 10, num=10000)
-#
-#
-# def f(x):
-#     c1 = -3
-#     w1 = 0.1
-#     c2 = 3
-#     w2 = 0.5
-#     result = double_sigmoid(x, c1, w1, c2, w2)
-#     if x < c1 - w1:
-#         result -= smooth_abs(x - (c1 - w1))
-#     if x > c2 + w2:
-#         result -= smooth_abs(x - (c2 + w2))
-#     return result
-#
-#
-# # foo = fancy_func([(-3, 0), (-2, 1), (0, 1), (3, 0)])
-# foo = fancy_func([(-3, 2), (-2, 1), (0, 1), (3, -3)])
-# # bar = foo(-0.1)
-# # print(bar)
-#
-# # plt.plot(t, abs(t), 'r-', t, [foo(x) for x in t], 'b-')
-# plt.plot(t, [foo(x) for x in t], 'b-')
-# plt.show()
