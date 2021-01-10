@@ -1,12 +1,16 @@
 import numpy as np
 import copy
-import random
 import itertools
 from enum import Enum
 
 class GRAD_TYPE(Enum):
+    # Your standard gradient descent. The gradient is calculated for all samples at once
     BATCH = 0
+    # Stochastic Gradient Descent where the gradient is calculated for a single sample at a time.
+    # Samples are selected in order.
     SEQUENTIAL_STOCHASTIC = 1
+    # Stochastic Gradient Descent where the gradient is calculated for a single sample at a time.
+    # Samples are selected randomly.
     RANDOM_STOCHASTIC = 2
 
 def _batch_grad(cost_fun, x: np.array):
@@ -21,6 +25,7 @@ def _batch_grad(cost_fun, x: np.array):
         g = diff / (2*dx)
         ret.append(g)
     return np.array(ret)
+
 
 def _create_sequential_stochastic_grad_func():
     class SSGrad:
