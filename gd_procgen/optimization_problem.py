@@ -36,11 +36,12 @@ class OptimizationProblem(ABC):
     def optimize(self):
         def callback(x):
             self._data.append(x)
+            print(self.cost(x))
 
-        minimize(
-            self.cost, self.x0(), grad_type=GRAD_TYPE.BATCH, callback=callback
-        )
+        # TODO: Warn about crazy high cost values. May indicate extreme functions used in the cost
+        # function
 
+        minimize(self.cost, self.x0(), grad_type=GRAD_TYPE.RANDOM_STOCHASTIC, callback=callback, callback_every=1)
 
     def play_animation(self):
         def _create_animation_function(func):
@@ -57,7 +58,7 @@ class OptimizationProblem(ABC):
 
             return animate
 
-        assert data
+        assert self._data
 
         self._ax.set_xlim(self.xlim())
         self._ax.set_ylim(self.ylim())
@@ -67,10 +68,6 @@ class OptimizationProblem(ABC):
         animation_func = _create_animation_function(self.draw)
 
         animation.FuncAnimation(
-            self._fig,
-            animation_func,
-            len(self._data),
-            interval=0.1 * 1000,
-            blit=True
+            self._fig, animation_func, len(self._data), interval=16, blit=True, repeat=False
         )
         plt.show()
