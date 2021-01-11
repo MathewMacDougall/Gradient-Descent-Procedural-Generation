@@ -44,7 +44,9 @@ class LakeAndTowns(OptimizationProblem):
         CITY_3_Y = auto()
 
     def x0(self):
-        return np.random.default_rng().uniform(np.full(len(list(self.Data)), -5), np.full(len(list(self.Data)), 5))
+        return np.random.default_rng().uniform(
+            np.full(len(list(self.Data)), -5), np.full(len(list(self.Data)), 5)
+        )
 
     def cost(self, x):
         water_pos = [x[self.Data.LAKE_X], x[self.Data.LAKE_Y]]
@@ -60,6 +62,7 @@ class LakeAndTowns(OptimizationProblem):
             return math.hypot(a[0] - b[0], a[1] - b[1])
 
         cities = [city_1_pos, city_2_pos, city_3_pos]
+
         def dist_to_other_cities(c):
             ret = 0
             for other in cities:
@@ -70,9 +73,9 @@ class LakeAndTowns(OptimizationProblem):
 
         values = [
             math.fabs(water_radius - 2),
-            math.fabs(dist_from_water(city_1_pos)-1),
-            math.fabs(dist_from_water(city_2_pos)-1),
-            math.fabs(dist_from_water(city_3_pos)-1),
+            math.fabs(dist_from_water(city_1_pos) - 1),
+            math.fabs(dist_from_water(city_2_pos) - 1),
+            math.fabs(dist_from_water(city_3_pos) - 1),
             math.exp(-dist_to_other_cities(city_1_pos)),
             math.exp(-dist_to_other_cities(city_2_pos)),
             math.exp(-dist_to_other_cities(city_3_pos)),
@@ -84,7 +87,14 @@ class LakeAndTowns(OptimizationProblem):
             self._ax.plot(data[self.Data.CITY_1_X], data[self.Data.CITY_1_Y], "ro"),
             self._ax.plot(data[self.Data.CITY_2_X], data[self.Data.CITY_2_Y], "ro"),
             self._ax.plot(data[self.Data.CITY_3_X], data[self.Data.CITY_3_Y], "ro"),
-            self._ax.add_artist(plt.Circle((data[self.Data.LAKE_X], data[self.Data.LAKE_Y]), data[self.Data.LAKE_RADIUS], color="b", alpha=0.5)),
+            self._ax.add_artist(
+                plt.Circle(
+                    (data[self.Data.LAKE_X], data[self.Data.LAKE_Y]),
+                    data[self.Data.LAKE_RADIUS],
+                    color="b",
+                    alpha=0.5,
+                )
+            ),
         ]
 
     def xlim(self):
@@ -92,6 +102,7 @@ class LakeAndTowns(OptimizationProblem):
 
     def ylim(self):
         return (-5, 5)
+
 
 def main():
     # problem = SinglePoint()

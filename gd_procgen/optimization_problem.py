@@ -41,7 +41,13 @@ class OptimizationProblem(ABC):
         # TODO: Warn about crazy high cost values. May indicate extreme functions used in the cost
         # function
 
-        minimize(self.cost, self.x0(), grad_type=GRAD_TYPE.RANDOM_STOCHASTIC, callback=callback, callback_every=1)
+        minimize(
+            self.cost,
+            self.x0(),
+            grad_type=GRAD_TYPE.RANDOM_STOCHASTIC,
+            callback=callback,
+            callback_every=1,
+        )
 
     def play_animation(self):
         def _create_animation_function(func):
@@ -68,6 +74,11 @@ class OptimizationProblem(ABC):
         animation_func = _create_animation_function(self.draw)
 
         animation.FuncAnimation(
-            self._fig, animation_func, len(self._data), interval=16, blit=True, repeat=False
+            self._fig,
+            animation_func,
+            len(self._data),
+            interval=16,
+            blit=True,
+            repeat=False,
         )
         plt.show()
