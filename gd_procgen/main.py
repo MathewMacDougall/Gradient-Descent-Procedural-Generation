@@ -2,7 +2,7 @@ import numpy as np
 from gd_procgen.optimization_problem import OptimizationProblem
 import matplotlib.pyplot as plt
 from gd_procgen.data_enum import *
-from gd_procgen.math_util import create_sigmoid_interpolation
+from pathlib import Path
 import math
 
 
@@ -44,7 +44,7 @@ class LakeAndTowns(OptimizationProblem):
         CITY_3_Y = auto()
 
     def x0(self):
-        return np.random.default_rng().uniform(
+        return self._rng.uniform(
             np.full(len(list(self.Data)), -5), np.full(len(list(self.Data)), 5)
         )
 
@@ -105,10 +105,10 @@ class LakeAndTowns(OptimizationProblem):
 
 
 def main():
-    # problem = SinglePoint()
-    problem = LakeAndTowns()
+    problem = LakeAndTowns(rand_seed=1)
     problem.optimize()
     problem.play_animation()
+    # problem.save_animation(Path(__file__).parent / "lake_and_towns.mp4")
 
 
 if __name__ == "__main__":
