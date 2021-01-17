@@ -8,7 +8,8 @@ At some point I had an idea: _What if we expressed the relationships of the vari
 
 This repo is my experiments with this idea.
 
-#### Blog / My Progress
+## Blog / My Progress
+### The basics
 My very first few commits here were from tinkering at the end of my school semester when I had some time. It was quick and dirty, but did seem to show the idea worked. I got busy with other things immediately after and didn't get back to this for a while. Here I am 9 months later (older and wiser) ready to try this again for real.
 
 I scrapped all my previous code because it had no real structure. I wrote my own simple versions of Gradient Descent and Stochastic Gradient Descent. I then made a simple class to describe each "optimization problem" for the procedural generation. Sprinkle some matplotlib in there for visualization, and it was good to go. With all that ready, I made a very simple example that optimized the position of a single point. This worked as expected, but isn't that interesting so I'm not going to show it here.
@@ -28,3 +29,23 @@ Now although this barely more complicated example worked, it did expose some dra
 1. Setting up the optimization vector and converting between the vector and more useable datatypes is very verbose and tedious. This makes it more difficult to initialize the vector, and be concise and expressive in the cost function. If it was annoying with only 9 values in the vector, it will only get exponentially worse for larger problems.
 2. Writing cost functions is difficult and error-prone. My very first version of the cost function had the following line: `lake_cost = lake_radius^4`. This caused the optimization to silently fail and hang the program, because the gradient was so large that even at moderate values of `lake_radius`, the gradient descent algorithm was unstable and unable to converge. Changing this line to `fabs(lake_radius - 2)` solved this problem, but clearly indicated the need for a better way to write cost functions such that issues like this can be avoided.
 
+### Adding complexity (and coolness)
+With the basic examples we identified likely problems as problems become more complicated. To figure out exactly how to deal with this, I thought of some more complex examples and plan to work backwards from here
+
+#### More Complicated City Layouts
+* Place a variable number of cities
+* Place a variable number of bodies of water
+  * Lakes: represented by polygons
+  * Rivers: represented by bezier curves / splines
+
+#### Biome Layouts
+* Each biome represented either as
+  * A 2D point, and the final region each biome occupies can be created with a [Voronai Diagram](https://en.wikipedia.org/wiki/Voronoi_diagram)
+  * A polygon
+* Biomes each have metadata like temperature and precipitation. Biomes with similar environments should be closer together (eg. no snow next to a desert)
+
+From these new use cases we see we need several new features
+* The ability to set up a problem with a variable number of objects (or of a given object type)
+* The ability to store metadata with each distinct object (not necessarily each variable in the optimization vector), and this metadata needs to be available in the cost function
+* From before, a much easier way to set up the optimization vector and write cost functions
+  * Example: Expressing "all cities should be close to any body of water" currently can't be done, and doesn't work unless the optimization vector is known ahead of time (so doesn't support variable numbers of objects)
