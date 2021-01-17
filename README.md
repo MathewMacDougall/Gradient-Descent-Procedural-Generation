@@ -8,23 +8,23 @@ At some point I had an idea: _What if we expressed the relationships of the vari
 
 This repo is my experiments with this idea.
 
-## Blog
-My thoughts and experiences throughout this adventure
+#### Blog / My Progress
+My very first few commits here were from tinkering at the end of my school semester when I had some time. It was quick and dirty, but did seem to show the idea worked. I got busy with other things immediately after and didn't get back to this for a while. Here I am 9 months later (older and wiser) ready to try this again for real.
 
-#### May 1, 2020
-Got something super basic working today. I'm optimizing the position and size of a lake, and the positions of 3 cities and my working example for now. The biggest issue I ran into for a while was that the optimization did not seem to be working. Sometimes it didn't seem to move anything in the right directions, or even move them at all. Turns out I was relying way too much on sigmoid functions, and was getting effectively 0 gradients when initializing random values because they would be so far out of range. Lesson learned, don't blindly use the loss functions used in Neural Nets just because they exist. This is a much different application. To prove to myself the optimization did work (at least somewhat) I used the negative absolute value to really force the variables to a specific value.
+I scrapped all my previous code because it had no real structure. I wrote my own simple versions of Gradient Descent and Stochastic Gradient Descent. I then made a simple class to describe each "optimization problem" for the procedural generation. Sprinkle some matplotlib in there for visualization, and it was good to go. With all that ready, I made a very simple example that optimized the position of a single point. This worked as expected, but isn't that interesting so I'm not going to show it here.
 
-![Working Example](media/2020-05-01_working_example.png)
+Now that I had the simplest possible proof-of-concept working, I moved on to try make a slightly more complicated example: Placing 3 cities around a single body of water (which I refer to as a lake).
 
-#### May 2, 2020
-Today I planned on experimenting mainly with different cost/loss functions, but got sidetracked first enabling animations of the optimization progress #priorities. After being frustrated with `matplotlib` for a while, I found the [celluloid](https://github.com/jwkvam/celluloid) module which made things much easier. Now I can watch everything move around during the optimization and be confused (yet entertained) when it doesn't work. I should probably start writing unit tests...
+The position of each city, the position of the lake, and the radius of the (perfectly circular) lake would be the optimization parameters. The cost function was still relatively simple:
+* The lake radius was encouraged to be a specific radius
+* Cities try be near the water
+* Cities try be far from one another
 
-![Somewhat Working Optimization](media/2020-05-02_somewhat_working_optimization.gif)
+Before we talk about the issues this exposed, lets appreciate this cool animation:
 
-I did still get the chance to mess around with some new cost functions. Overall I do really like the sigmoids and double sigmoids, because I do want certain ranges of values to "plateau" the cost. I just can't have plateaus outside the expected/desired ranges of these values. After reading some [clickbaity articles on loss functions](https://heartbeat.fritz.ai/5-regression-loss-functions-all-machine-learners-should-know-4fb140e9d4b0), I started using the log-cosh loss  to smoothly increase the cost outside the valid ranges of parameters. I also created a function that "interpolates" between points using sigmoid functions, so I can easily provide a list of where I want the peaks, valleys, and plateaus in the function to be, and get a more-or-less corresponding function (with log-cosh loss applied everywhere outside the range I provide).
+TODO: animation here
 
-While this new magic function does seem to be more-or-less working, cities now seem to end up inside the lake in quite a few cases, and other times everything just flies around quite aggresively without settling somewhere I'd expect. I wonder if it's settling because my loss functions are so stupid, the backtracking line-search ends up with such a small step value that we meet the relative or absolute score different termination criteria.
+Now although this barely more complicated example worked, it did expose some drawbacks with the current setup:
+1. Setting up the optimization vector and converting between the vector and more useable datatypes is very verbose and tedious. This makes it more difficult to initialize the vector, and be concise and expressive in the cost function. If it was annoying with only 9 values in the vector, it will only get exponentially worse for larger problems.
+2. Writing cost functions is difficult and error-prone. My very first version of the cost function had the following line: `lake_cost = lake_radius^4`. This caused the optimization to silently fail and hang the program, because the gradient was so large that even at moderate values of `lake_radius`, the gradient descent algorithm was unstable and unable to converge. Changing this line to `fabs(lake_radius - 2)` solved this problem, but clearly indicated the need for a better way to write cost functions such that issues like this can be avoided.
 
-It also looks like when the lake and a city get close, they suddenly speed towards one another and overshoot such that the city ends up inside the lake or even on the other side. I think this might be because the gradients get quite large when they are close, and because this is "pure" gradient descent (not stochastic), both the city and lake move towards each other which results in a very large relative change. I'd like to try see if Stocastic Gradient Descent would help fix this by only moving one dimension at a time. Or simply putting a maximum on the step size for each dimension.
-
-![Lake City Overshoot](media/2020-05-02_lake_city_overshoot.gif)
